@@ -39,6 +39,7 @@ export default function Root({ children }: PropsWithChildren) {
 
         <style dangerouslySetInnerHTML={{ __html: baseStyle }} />
 
+        <script dangerouslySetInnerHTML={{ __html: captureInstallPrompt }} />
         <script dangerouslySetInnerHTML={{ __html: registerServiceWorker }} />
       </head>
       <body>{children}</body>
@@ -62,6 +63,24 @@ const baseStyle = `
     margin: 0 auto;
     box-shadow: 0 0 40px rgba(46, 41, 37, 0.12);
   }
+`;
+
+/**
+ * O Chrome dispara o convite de instalação assim que a página carrega, uma
+ * única vez. Como o botão só aparece bem depois, na tela de Perfil, é preciso
+ * segurar o evento aqui no topo do HTML e avisar o app quando ele existir.
+ */
+const captureInstallPrompt = `
+  window.__imhereInstall = null;
+  window.addEventListener('beforeinstallprompt', function (event) {
+    event.preventDefault();
+    window.__imhereInstall = event;
+    window.dispatchEvent(new Event('imhere-installable'));
+  });
+  window.addEventListener('appinstalled', function () {
+    window.__imhereInstall = null;
+    window.dispatchEvent(new Event('imhere-installed'));
+  });
 `;
 
 const registerServiceWorker = `
