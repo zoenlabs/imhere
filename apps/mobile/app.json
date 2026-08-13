@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "I'm Here",
+    "slug": "im-here",
+    "version": "0.1.0",
+    "scheme": "imhere",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F2E8D8",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.zoenlabs.imhere"
+    },
+    "android": {
+      "package": "com.zoenlabs.imhere",
+      "adaptiveIcon": {
+        "backgroundColor": "#F2E8D8",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#D4A72C",
+          "defaultChannel": "alarme-praticas"
+        }
+      ],
+      "./plugins/withAlarme",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 170,
+          "resizeMode": "contain",
+          "backgroundColor": "#F2E8D8"
+        }
+      ],
+      "@react-native-community/datetimepicker"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

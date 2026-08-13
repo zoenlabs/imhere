@@ -1,0 +1,48 @@
+# Dependências
+node_modules/
+.pnp
+.pnp.js
+
+# Expo
+.expo/
+.expo-shared/
+dist/
+web-build/
+expo-env.d.ts
+
+# Builds nativos (gerados pelo prebuild / EAS)
+android/
+ios/
+*.apk
+*.aab
+*.ipa
+
+# EAS
+.easignore
+
+# Segredos e ambiente
+.env
+.env.*
+!.env.example
+google-services.json
+GoogleService-Info.plist
+*.keystore
+*.jks
+*.p8
+*.p12
+*.mobileprovision
+
+# Sistema e editores
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Cache de ferramentas
+*.tsbuildinfo
+.metro-health-check*
