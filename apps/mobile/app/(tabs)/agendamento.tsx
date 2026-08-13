@@ -1,10 +1,10 @@
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { TimeField } from '@/components/TimeField';
 import { practiceGlyphs, practiceShort } from '@/data/glyphs';
 import { practices } from '@/data/practices';
 import { ALL_DAYS, dayLabels, daysSummary, FREE, useAppStore } from '@/store/useAppStore';
@@ -28,18 +28,11 @@ export default function Agendamento() {
 
   const [practiceId, setPracticeId] = useState(premium ? practices[0].id : FREE.practiceId);
   const [time, setTime] = useState(() => atTime(7, 0));
-  const [showPicker, setShowPicker] = useState(false);
   const [days, setDays] = useState<number[]>(ALL_DAYS);
 
   const toggleDay = (d: number) => {
     setDays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d].sort()));
     Haptics.selectionAsync();
-  };
-
-  const onChangeTime = (event: DateTimePickerEvent, selected?: Date) => {
-    // No Android o diálogo se fecha sozinho; no iOS a roda fica aberta
-    if (Platform.OS === 'android') setShowPicker(false);
-    if (event.type === 'set' && selected) setTime(selected);
   };
 
   const add = () => {
@@ -50,8 +43,6 @@ export default function Agendamento() {
     s.addSchedule(practiceId, time.getHours(), time.getMinutes(), days);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
-
-  const label = time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -92,37 +83,7 @@ export default function Agendamento() {
           </View>
 
           <Text style={[styles.label, { marginTop: spacing.md }]}>Horário</Text>
-          <Pressable
-            style={({ pressed }) => [styles.timeRow, pressed && styles.timeRowPressed]}
-            onPress={() => {
-              setShowPicker(true);
-              Haptics.selectionAsync();
-            }}
-          >
-            <Text style={styles.time}>{label}</Text>
-            <View style={styles.timeHint}>
-              <Feather name="clock" size={16} color={colors.olive} />
-              <Text style={styles.timeHintText}>tocar para escolher</Text>
-            </View>
-          </Pressable>
-
-          {showPicker && (
-            <View style={styles.pickerWrap}>
-              <DateTimePicker
-                value={time}
-                mode="time"
-                is24Hour
-                display={Platform.OS === 'ios' ? 'spinner' : 'clock'}
-                onChange={onChangeTime}
-                textColor={colors.text}
-              />
-              {Platform.OS === 'ios' && (
-                <Pressable style={styles.pickerDone} onPress={() => setShowPicker(false)}>
-                  <Text style={styles.pickerDoneText}>Pronto</Text>
-                </Pressable>
-              )}
-            </View>
-          )}
+          <TimeField value={time} onChange={setTime} />
 
           <Text style={[styles.label, { marginTop: spacing.md }]}>Repetir</Text>
           <View style={styles.days}>
@@ -277,19 +238,6 @@ const styles = StyleSheet.create({
   chipText: { fontSize: 13, color: colors.text },
   chipTextActive: { color: colors.coffee, fontWeight: '700' },
 
-  timeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.bg,
-    borderRadius: radius.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-  },
-  timeRowPressed: { opacity: 0.75 },
-  time: { fontSize: 40, fontWeight: '800', color: colors.text, letterSpacing: 1 },
-  timeHint: { alignItems: 'flex-end', gap: 3 },
-  timeHintText: { fontSize: 11, color: colors.textMuted },
 
   days: { flexDirection: 'row', gap: 6 },
   day: {
@@ -306,9 +254,6 @@ const styles = StyleSheet.create({
   dayTextActive: { color: colors.coffee },
   daysSummary: { fontSize: 12, color: colors.textMuted },
 
-  pickerWrap: { backgroundColor: colors.bg, borderRadius: radius.md, paddingVertical: spacing.xs },
-  pickerDone: { alignSelf: 'center', paddingVertical: spacing.sm, paddingHorizontal: spacing.lg },
-  pickerDoneText: { color: colors.olive, fontWeight: '700', fontSize: 15 },
 
   add: {
     backgroundColor: colors.gold,
