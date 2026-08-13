@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useRef } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { InstallButton } from '@/components/InstallButton';
 import { useAppStore } from '@/store/useAppStore';
 import { colors, radius, spacing } from '@/theme';
 
@@ -11,10 +12,25 @@ export default function Perfil() {
   const last7 = s.history.slice(0, 7);
   const totalPoints = s.history.reduce((a, d) => a + d.points, 0) + s.pointsToday;
 
+  // Painel de teste: 5 toques no nome liberam o controle de Premium.
+  // Serve para validar o app antes das lojas, sem expor isso ao usuário comum.
+  const taps = useRef(0);
+  const showDev = __DEV__ || s.devUnlocked;
+
+  const secretTap = () => {
+    taps.current += 1;
+    if (taps.current >= 5 && !s.devUnlocked) {
+      s.unlockDev();
+      Alert.alert('Modo de teste liberado', 'O controle de Premium apareceu no fim da tela.');
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>{s.name || 'Perfil'}</Text>
+        <Pressable onPress={secretTap}>
+          <Text style={styles.title}>{s.name || 'Perfil'}</Text>
+        </Pressable>
         <Text style={styles.sub}>
           {s.premium ? 'Assinante Premium' : 'Plano Essencial (gratuito)'}
         </Text>
@@ -62,8 +78,10 @@ export default function Perfil() {
           acompanhamento médico ou psicológico. Versículos: Almeida (domínio público).
         </Text>
 
-        {/* Só aparece durante o desenvolvimento. Some no app publicado. */}
-        {__DEV__ && (
+        <InstallButton />
+
+        {/* Aparece no desenvolvimento ou depois dos 5 toques no nome */}
+        {showDev && (
           <View style={styles.dev}>
             <Text style={styles.devTitle}>Modo desenvolvedor</Text>
 

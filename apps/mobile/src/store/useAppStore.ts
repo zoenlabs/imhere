@@ -121,6 +121,14 @@ interface AppState {
   setPremium: (active: boolean) => void;
   hasPremiumAccess: () => boolean;
   dayComplete: () => boolean;
+
+  // Painel de teste liberado por gesto (5 toques no nome do perfil)
+  devUnlocked: boolean;
+  unlockDev: () => void;
+
+  // Só vira true quando os dados salvos terminaram de carregar
+  hydrated: boolean;
+  setHydrated: () => void;
   reset: () => void;
 }
 
@@ -141,6 +149,7 @@ const initial = {
   doneToday: [] as string[],
   seenToday: [] as string[],
   premium: false,
+  devUnlocked: false,
 };
 
 export const useAppStore = create<AppState>()(
@@ -281,11 +290,21 @@ export const useAppStore = create<AppState>()(
       // Saldo de Alegria cheio: a jornada do dia está concluída
       dayComplete: () => get().pointsToday >= DAILY_MAX,
 
+      unlockDev: () => set({ devUnlocked: true }),
+
+      hydrated: false,
+      setHydrated: () => set({ hydrated: true }),
+
       reset: () => set({ ...initial, today: todayKey() }),
     }),
     {
       name: 'im-here-store',
       storage: createJSONStorage(() => AsyncStorage),
+      // `hydrated` é estado de sessão: não deve ser salvo nem restaurado
+      partialize: ({ hydrated, ...rest }) => rest as AppState,
+      onRehydrateStorage: () => (state) => {
+        state?.setHydrated();
+      },
     }
   )
 );

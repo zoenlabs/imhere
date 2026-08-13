@@ -7,8 +7,9 @@ import { useAppStore } from '@/store/useAppStore';
 // Splash em três tempos: a coroa, o nome, o versículo. Depois entra no app.
 export default function Splash() {
   const router = useRouter();
-  const onboarded = useAppStore((s) => s.onboarded);
   const rollDay = useAppStore((s) => s.rollDayIfNeeded);
+  const hydrated = useAppStore((s) => s.hydrated);
+  const finished = useRef(false);
 
   const crown = useRef(new Animated.Value(0)).current;
   const logo = useRef(new Animated.Value(0)).current;
@@ -43,7 +44,8 @@ export default function Splash() {
       fade(verse, 0, 400),
     ]).start(() => {
       if (cancelled) return;
-      router.replace(onboarded ? '/(tabs)' : '/onboarding');
+      finished.current = true;
+      leave();
     });
 
     return () => {
@@ -51,6 +53,22 @@ export default function Splash() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /**
+   * Só sai do splash quando a animação terminou E os dados salvos já
+   * carregaram. Ler `onboarded` cedo demais mandava todo mundo para o
+   * onboarding de novo, dando a impressão de que nada era salvo.
+   */
+  const leave = () => {
+    if (!finished.current || !useAppStore.getState().hydrated) return;
+    const { onboarded } = useAppStore.getState();
+    router.replace(onboarded ? '/(tabs)' : '/onboarding');
+  };
+
+  useEffect(() => {
+    if (hydrated) leave();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
 
   return (
     <View style={styles.container}>

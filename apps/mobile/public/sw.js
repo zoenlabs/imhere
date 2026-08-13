@@ -6,7 +6,7 @@
  *
  * Suba o número da versão sempre que publicar; isso limpa o cache antigo.
  */
-const VERSION = 'imhere-v1';
+const VERSION = 'imhere-v2';
 const CORE = ['/', '/manifest.json', '/icons/icon-192.png', '/icons/icon-512.png'];
 
 self.addEventListener('install', (event) => {
