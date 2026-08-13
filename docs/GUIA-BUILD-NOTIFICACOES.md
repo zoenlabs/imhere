@@ -18,13 +18,13 @@ npx expo install expo-notifications expo-dev-client @notifee/react-native
 Crie a conta gratuita em https://expo.dev e depois:
 
 ```
-npx eas login
+eas login
 ```
 
 ## Etapa 3 — Gerar o APK
 
 ```
-npx eas build --profile development --platform android
+eas build --profile development --platform android
 ```
 
 A compilação roda no servidor da Expo e leva de 10 a 25 minutos. Ao terminar,

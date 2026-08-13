@@ -15,7 +15,7 @@ Gera um APK que qualquer pessoa instala pelo link, sem passar pela Play Store.
 É o melhor jeito de validar com o círculo próximo.
 
 ```
-npx eas build --profile preview --platform android
+eas build --profile preview --platform android
 ```
 
 Ao final o terminal mostra um link e um QR Code. Quem receber precisa autorizar
@@ -29,8 +29,8 @@ o paywall de verdade, use o caminho oficial abaixo.
 Necessário: conta de desenvolvedor Google Play, US$ 25 pagos uma única vez.
 
 1. Crie o app no Play Console
-2. Gere o pacote de produção: `npx eas build --profile production --platform android`
-3. Envie: `npx eas submit --platform android`
+2. Gere o pacote de produção: `eas build --profile production --platform android`
+3. Envie: `eas submit --platform android`
 4. No Play Console, vá em Teste → Teste interno, crie a lista de e-mails e compartilhe o link
 
 O teste interno libera em minutos e aceita até 100 testadores. É aqui que as
@@ -43,8 +43,8 @@ assinaturas passam a funcionar de verdade.
 Necessário: Apple Developer Program, US$ 99 por ano.
 
 ```
-npx eas build --profile production --platform ios
-npx eas submit --platform ios
+eas build --profile production --platform ios
+eas submit --platform ios
 ```
 
 Depois, no App Store Connect, o build aparece em TestFlight.
@@ -62,7 +62,7 @@ Ajustes de tela, texto e regras em JavaScript podem ir para os testadores sem ge
 build novo:
 
 ```
-npx eas update --branch preview
+eas update --branch preview
 ```
 
 Só exige build novo quando mexemos em permissão, ícone, plugin nativo ou biblioteca

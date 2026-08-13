@@ -43,6 +43,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "be1499d7-e286-423b-9f3b-e368fbfce55f"
+      }
+    },
+    "owner": "zoen.labs"
   }
 }
