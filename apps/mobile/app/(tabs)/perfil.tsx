@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React, { useRef } from 'react';
+import React from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { InstallButton } from '@/components/InstallButton';
@@ -12,25 +12,14 @@ export default function Perfil() {
   const last7 = s.history.slice(0, 7);
   const totalPoints = s.history.reduce((a, d) => a + d.points, 0) + s.pointsToday;
 
-  // Painel de teste: 5 toques no nome liberam o controle de Premium.
-  // Serve para validar o app antes das lojas, sem expor isso ao usuário comum.
-  const taps = useRef(0);
-  const showDev = __DEV__ || s.devUnlocked;
-
-  const secretTap = () => {
-    taps.current += 1;
-    if (taps.current >= 5 && !s.devUnlocked) {
-      s.unlockDev();
-      Alert.alert('Modo de teste liberado', 'O controle de Premium apareceu no fim da tela.');
-    }
-  };
+  // Painel de teste: existe só em desenvolvimento. No build de loja ele
+  // nunca aparece, para ninguém liberar o Premium sem assinar.
+  const showDev = __DEV__;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Pressable onPress={secretTap}>
-          <Text style={styles.title}>{s.name || 'Perfil'}</Text>
-        </Pressable>
+        <Text style={styles.title}>{s.name || 'Perfil'}</Text>
         <Text style={styles.sub}>
           {s.premium ? 'Assinante Premium' : 'Plano Essencial (gratuito)'}
         </Text>
@@ -80,7 +69,7 @@ export default function Perfil() {
 
         <InstallButton />
 
-        {/* Aparece no desenvolvimento ou depois dos 5 toques no nome */}
+        {/* Só em desenvolvimento */}
         {showDev && (
           <View style={styles.dev}>
             <Text style={styles.devTitle}>Modo desenvolvedor</Text>

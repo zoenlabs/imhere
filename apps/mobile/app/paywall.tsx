@@ -4,6 +4,7 @@ import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
 import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { openPrivacy, openTerms } from '@/lib/legal';
 import { buy, loadOffers, PlanOffer, redeemCode, restore } from '@/lib/purchases';
 import { useAppStore } from '@/store/useAppStore';
 import { colors, radius, spacing } from '@/theme';
@@ -15,15 +16,15 @@ const plans = [
   {
     id: 'mensal' as PlanId,
     name: 'Mensal',
-    price: 'R$ 12,90',
+    price: 'R$ 19,90',
     note: 'por mês',
     tag: null as string | null,
   },
   {
     id: 'anual' as PlanId,
     name: 'Anual',
-    price: 'R$ 97,50',
-    note: '≈ R$ 8,13/mês',
+    price: 'R$ 149,90',
+    note: '≈ R$ 12,49/mês',
     tag: '37% OFF',
   },
 ];
@@ -188,11 +189,24 @@ export default function Paywall() {
           </Pressable>
         </View>
 
+        {/* Exigido pelas lojas na tela de assinatura: renovação automática,
+            cancelamento e links para Termos e Privacidade. */}
         <Text style={styles.legal}>
-          A assinatura é gerenciada pela Apple Store ou Google Play. Cancele quando quiser. O trial
-          gratuito começa após a sua primeira prática concluída e vira assinatura automaticamente ao
-          final dos 7 dias, se não for cancelado.
+          O teste grátis de 7 dias começa ao assinar. Ao final, a cobrança do plano escolhido é
+          feita automaticamente pela {Platform.OS === 'ios' ? 'App Store' : 'Google Play'} e se renova
+          a cada período, a menos que você cancele nas configurações da loja com pelo menos 24 horas
+          de antecedência.
         </Text>
+
+        <View style={styles.links}>
+          <Pressable onPress={openTerms}>
+            <Text style={styles.legalLink}>Termos de uso</Text>
+          </Pressable>
+          <Text style={styles.linkDivider}>·</Text>
+          <Pressable onPress={openPrivacy}>
+            <Text style={styles.legalLink}>Política de privacidade</Text>
+          </Pressable>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -276,4 +290,5 @@ const styles = StyleSheet.create({
   buttonText: { color: colors.coffee, fontSize: 17, fontWeight: '800' },
   buttonSub: { color: colors.coffee, fontSize: 12, opacity: 0.8, fontWeight: '600' },
   legal: { fontSize: 11, color: colors.textMuted, textAlign: 'center', lineHeight: 16 },
+  legalLink: { fontSize: 11, color: colors.textMuted, textDecorationLine: 'underline' },
 });

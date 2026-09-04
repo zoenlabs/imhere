@@ -5,8 +5,11 @@ const { withAndroidManifest, AndroidConfig } = require('expo/config-plugins');
  *
  * - USE_FULL_SCREEN_INTENT: a notificação de alarme toma a tela inteira
  *   por cima de qualquer app aberto.
- * - SCHEDULE_EXACT_ALARM / USE_EXACT_ALARM: o alarme dispara no minuto certo,
- *   sem o atraso que o Android aplica em notificações comuns.
+ * - SCHEDULE_EXACT_ALARM: o alarme dispara no minuto certo, sem o atraso que
+ *   o Android aplica em notificações comuns. No Android 14+ o usuário precisa
+ *   autorizar em Ajustes → Apps → I'm Here → "Alarmes e lembretes".
+ *   (USE_EXACT_ALARM foi removida de propósito: o Google reserva essa
+ *   permissão a despertadores e calendários e reprova outros apps.)
  * - WAKE_LOCK e TURN_SCREEN_ON: acordam a tela no horário.
  * - RECEIVE_BOOT_COMPLETED: os alarmes sobrevivem a um reinício do aparelho.
  *
@@ -19,7 +22,6 @@ const { withAndroidManifest, AndroidConfig } = require('expo/config-plugins');
 const PERMISSIONS = [
   'android.permission.USE_FULL_SCREEN_INTENT',
   'android.permission.SCHEDULE_EXACT_ALARM',
-  'android.permission.USE_EXACT_ALARM',
   'android.permission.WAKE_LOCK',
   'android.permission.TURN_SCREEN_ON',
   'android.permission.RECEIVE_BOOT_COMPLETED',
@@ -29,17 +31,13 @@ const PERMISSIONS = [
 
 module.exports = function withAlarme(config) {
   return withAndroidManifest(config, (cfg) => {
-    const manifest = cfg.modResults;
+    // cfg.modResults é o objeto raiz ({ manifest: {...} }); as permissões
+    // precisam entrar dentro de <manifest>, não ao lado dele. O helper do
+    // Expo já faz isso e evita duplicar as que o próprio Expo adiciona.
+    const androidManifest = cfg.modResults;
+    AndroidConfig.Permissions.ensurePermissions(androidManifest, PERMISSIONS);
 
-    manifest['uses-permission'] = manifest['uses-permission'] ?? [];
-    for (const name of PERMISSIONS) {
-      const exists = manifest['uses-permission'].some(
-        (item) => item.$?.['android:name'] === name
-      );
-      if (!exists) manifest['uses-permission'].push({ $: { 'android:name': name } });
-    }
-
-    const activity = AndroidConfig.Manifest.getMainActivityOrThrow(manifest);
+    const activity = AndroidConfig.Manifest.getMainActivityOrThrow(androidManifest);
     activity.$['android:showWhenLocked'] = 'true';
     activity.$['android:turnScreenOn'] = 'true';
     activity.$['android:launchMode'] = 'singleTask';

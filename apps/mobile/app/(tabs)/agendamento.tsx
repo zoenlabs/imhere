@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TimeField } from '@/components/TimeField';
+import { alarmsAvailable } from '@/lib/alarms';
 import { practiceGlyphs, practiceShort } from '@/data/glyphs';
 import { practices } from '@/data/practices';
 import { ALL_DAYS, dayLabels, daysSummary, FREE, useAppStore } from '@/store/useAppStore';
@@ -191,8 +192,9 @@ export default function Agendamento() {
         )}
 
         <Text style={styles.note}>
-          Os agendamentos já ficam salvos no aparelho. O envio das notificações no horário entra na
-          próxima fase do desenvolvimento.
+          {alarmsAvailable
+            ? 'No horário marcado o alarme toca e chama a prática. Um lembrete chega 5 minutos antes. Se não tocar, permita "Notificações" e "Alarmes e lembretes" nos ajustes do app.'
+            : 'Nesta versão os agendamentos ficam salvos, mas o alarme não toca. Instale o app pela loja para receber a chamada no horário.'}
         </Text>
       </ScrollView>
     </SafeAreaView>

@@ -122,10 +122,6 @@ interface AppState {
   hasPremiumAccess: () => boolean;
   dayComplete: () => boolean;
 
-  // Painel de teste liberado por gesto (5 toques no nome do perfil)
-  devUnlocked: boolean;
-  unlockDev: () => void;
-
   // Só vira true quando os dados salvos terminaram de carregar
   hydrated: boolean;
   setHydrated: () => void;
@@ -149,7 +145,6 @@ const initial = {
   doneToday: [] as string[],
   seenToday: [] as string[],
   premium: false,
-  devUnlocked: false,
 };
 
 export const useAppStore = create<AppState>()(
@@ -289,8 +284,6 @@ export const useAppStore = create<AppState>()(
 
       // Saldo de Alegria cheio: a jornada do dia está concluída
       dayComplete: () => get().pointsToday >= DAILY_MAX,
-
-      unlockDev: () => set({ devUnlocked: true }),
 
       hydrated: false,
       setHydrated: () => set({ hydrated: true }),

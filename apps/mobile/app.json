@@ -2,7 +2,7 @@
   "expo": {
     "name": "I'm Here",
     "slug": "im-here",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "scheme": "imhere",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -10,13 +10,17 @@
     "backgroundColor": "#F2E8D8",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.zoenlabs.imhere"
+      "bundleIdentifier": "com.zoenlabs.imhere",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.zoenlabs.imhere",
       "adaptiveIcon": {
         "backgroundColor": "#F2E8D8",
-        "foregroundImage": "./assets/android-icon-foreground.png"
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
       }
     },
     "plugins": [
@@ -39,7 +43,16 @@
           "backgroundColor": "#F2E8D8"
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
+      ]
     ],
     "web": {
       "bundler": "metro",
@@ -55,6 +68,12 @@
         "projectId": "be1499d7-e286-423b-9f3b-e368fbfce55f"
       }
     },
-    "owner": "zoen.labs"
+    "owner": "zoen.labs",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/be1499d7-e286-423b-9f3b-e368fbfce55f"
+    }
   }
 }
