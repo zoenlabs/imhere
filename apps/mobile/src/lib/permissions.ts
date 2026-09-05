@@ -1,6 +1,5 @@
 import { Platform } from 'react-native';
 import { alarmPermissionsNative as native } from '../../modules/alarm-permissions';
-import { todayKey, useAppStore } from '@/store/useAppStore';
 import { notifee, notifeeModule } from './alarms';
 
 /**
@@ -151,13 +150,25 @@ export const STEPS: Step[] = [
 export const missingSteps = (perms: AlarmPermissions): Step[] =>
   STEPS.filter((s) => perms[s.key] === 'off');
 
-/**
- * Decide se o assistente deve abrir: falta alguma permissão e o usuário
- * não pediu para deixar para depois hoje (`force` ignora o "depois").
- */
-export async function shouldPromptPermissions(force = false): Promise<boolean> {
+// "Deixar para depois" vale só até o app ser fechado: enquanto faltar
+// permissão, o assistente volta a abrir a cada abertura.
+let snoozedThisSession = false;
+export const snoozePermissions = () => {
+  snoozedThisSession = true;
+};
+
+/** true quando falta alguma permissão obrigatória (para o aviso da Home). */
+export async function hasMissingPermissions(): Promise<boolean> {
   if (!permissionsAvailable) return false;
-  if (!force && useAppStore.getState().permissionsSnoozedDay === todayKey()) return false;
   const perms = await readPermissions();
   return missingSteps(perms).length > 0;
+}
+
+/**
+ * Decide se o assistente deve abrir: falta alguma permissão e o usuário
+ * não pediu para deixar para depois nesta sessão (`force` ignora isso).
+ */
+export async function shouldPromptPermissions(force = false): Promise<boolean> {
+  if (!force && snoozedThisSession) return false;
+  return hasMissingPermissions();
 }

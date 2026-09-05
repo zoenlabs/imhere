@@ -115,10 +115,6 @@ interface AppState {
   name: string;
   goal: Goal | null;
   onboarded: boolean;
-  // Dia em que o usuário respondeu "agora não" ao pedido de permissões do
-  // alarme (Android): o app não insiste de novo no mesmo dia
-  permissionsSnoozedDay: string | null;
-  snoozePermissions: () => void;
 
   // Gamificação
   today: string;
@@ -170,7 +166,6 @@ const initial = {
   name: '',
   goal: null as Goal | null,
   onboarded: false,
-  permissionsSnoozedDay: null as string | null,
   today: todayKey(),
   pointsToday: 0,
   practicesToday: 0,
@@ -193,7 +188,6 @@ export const useAppStore = create<AppState>()(
 
       setProfile: (name, goal) => set({ name, goal, onboarded: true }),
       setName: (name) => set({ name: name.trim() || 'amigo' }),
-      snoozePermissions: () => set({ permissionsSnoozedDay: todayKey() }),
 
       addSchedule: (practiceId, hour, minute, days) => {
         const s = get();

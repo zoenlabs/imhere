@@ -7,10 +7,10 @@ import {
   AlarmPermissions,
   missingSteps,
   readPermissions,
+  snoozePermissions,
   Step,
   STEPS,
 } from '@/lib/permissions';
-import { useAppStore } from '@/store/useAppStore';
 import { colors, radius, spacing } from '@/theme';
 
 const icons: Record<Step['key'], React.ComponentProps<typeof Feather>['name']> = {
@@ -30,7 +30,6 @@ const icons: Record<Step['key'], React.ComponentProps<typeof Feather>['name']> =
  */
 export default function Permissoes() {
   const router = useRouter();
-  const snooze = useAppStore((s) => s.snoozePermissions);
 
   const [perms, setPerms] = useState<AlarmPermissions | null>(null);
   const [tried, setTried] = useState<Step['key'] | null>(null);
@@ -69,7 +68,7 @@ export default function Permissoes() {
   };
 
   const later = () => {
-    snooze();
+    snoozePermissions();
     close();
   };
 

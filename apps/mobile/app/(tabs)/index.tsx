@@ -1,10 +1,12 @@
+import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { AppState, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { JoyMeter } from '@/components/JoyMeter';
 import { kindLabel } from '@/data/content';
 import { practices } from '@/data/practices';
+import { hasMissingPermissions, permissionsAvailable } from '@/lib/permissions';
 import { useAffirmation } from '@/lib/pickAffirmation';
 import { greeting, useAppStore } from '@/store/useAppStore';
 import { colors, radius, spacing } from '@/theme';
@@ -16,6 +18,19 @@ export default function Home() {
   useEffect(() => {
     s.rollDayIfNeeded();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Aviso fixo enquanto faltar permissão do alarme (Android). Relê ao voltar
+  // ao app, que é quando o usuário retorna dos Ajustes.
+  const [alarmAtRisk, setAlarmAtRisk] = useState(false);
+  useEffect(() => {
+    if (!permissionsAvailable) return;
+    const check = () => hasMissingPermissions().then(setAlarmAtRisk).catch(() => {});
+    check();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') check();
+    });
+    return () => sub.remove();
   }, []);
 
   // Frase da Home: sorteada a cada abertura do app, sem repetir as de hoje
@@ -42,6 +57,20 @@ export default function Home() {
           )}
         </View>
         <Text style={styles.sub}>Pare por um instante. Você não precisa carregar tudo sozinho.</Text>
+
+        {alarmAtRisk && (
+          <Pressable
+            style={({ pressed }) => [styles.warn, pressed && { opacity: 0.8 }]}
+            onPress={() => router.push('/permissoes')}
+          >
+            <Feather name="alert-circle" size={18} color={colors.coffee} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.warnTitle}>O alarme pode não tocar</Text>
+              <Text style={styles.warnSub}>Falta liberar permissões. Toque para resolver.</Text>
+            </View>
+            <Feather name="chevron-right" size={18} color={colors.coffee} />
+          </Pressable>
+        )}
 
         <JoyMeter points={s.pointsToday} />
 
@@ -95,6 +124,17 @@ const styles = StyleSheet.create({
     letterSpacing: 1.6,
   },
   sub: { fontSize: 15, color: colors.textMuted, marginTop: -spacing.sm, lineHeight: 22 },
+  warn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.gold,
+    borderRadius: radius.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  warnTitle: { fontSize: 14, fontWeight: '800', color: colors.coffee },
+  warnSub: { fontSize: 12, color: colors.coffee, opacity: 0.85 },
   affirmation: {
     backgroundColor: colors.bgSoft,
     borderRadius: radius.lg,
