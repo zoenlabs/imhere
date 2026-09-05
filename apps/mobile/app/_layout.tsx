@@ -3,12 +3,16 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { initPurchases } from '@/lib/purchases';
+import { useUpdatePrompt } from '@/lib/updates';
 import { usePracticeFlow } from '@/lib/usePracticeFlow';
 import { colors } from '@/theme';
 
 export default function RootLayout() {
   // Lembretes, toque na notificação e tela cheia do horário agendado
   usePracticeFlow();
+
+  // "Atualizar agora" quando uma atualização direta terminar de baixar
+  useUpdatePrompt();
 
   // Assinatura: o acesso Premium vem do entitlement do RevenueCat
   useEffect(() => {
