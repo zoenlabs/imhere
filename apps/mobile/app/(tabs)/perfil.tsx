@@ -1,8 +1,18 @@
 import { useRouter } from 'expo-router';
-import React from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { InstallButton } from '@/components/InstallButton';
+import { Feather } from '@expo/vector-icons';
+import { permissionsAvailable } from '@/lib/permissions';
 import { useAppStore } from '@/store/useAppStore';
 import { colors, radius, spacing } from '@/theme';
 
@@ -16,10 +26,48 @@ export default function Perfil() {
   // nunca aparece, para ninguém liberar o Premium sem assinar.
   const showDev = __DEV__;
 
+  // Edição do nome direto no título
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(s.name);
+
+  const startEdit = () => {
+    setDraft(s.name);
+    setEditing(true);
+  };
+  const saveName = () => {
+    s.setName(draft);
+    setEditing(false);
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>{s.name || 'Perfil'}</Text>
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        {editing ? (
+          <View style={styles.editRow}>
+            <TextInput
+              style={styles.editInput}
+              value={draft}
+              onChangeText={setDraft}
+              placeholder="Seu nome"
+              placeholderTextColor={colors.textMuted}
+              autoFocus
+              maxLength={40}
+              returnKeyType="done"
+              onSubmitEditing={saveName}
+            />
+            <Pressable hitSlop={8} onPress={saveName}>
+              <Feather name="check" size={24} color={colors.olive} />
+            </Pressable>
+            <Pressable hitSlop={8} onPress={() => setEditing(false)}>
+              <Feather name="x" size={22} color={colors.textMuted} />
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable style={styles.titleRow} onPress={startEdit} hitSlop={6}>
+            <Text style={styles.title}>{s.name || 'Perfil'}</Text>
+            <Feather name="edit-2" size={16} color={colors.textMuted} />
+          </Pressable>
+        )}
         <Text style={styles.sub}>
           {s.premium ? 'Assinante Premium' : 'Plano Essencial (gratuito)'}
         </Text>
@@ -62,12 +110,24 @@ export default function Perfil() {
           </Pressable>
         )}
 
+        {permissionsAvailable && (
+          <Pressable
+            style={({ pressed }) => [styles.row, pressed && { opacity: 0.7 }]}
+            onPress={() => router.push('/permissoes')}
+          >
+            <Feather name="bell" size={18} color={colors.olive} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowTitle}>Alarmes e permissões</Text>
+              <Text style={styles.rowSub}>Se o alarme não tocar no horário, revise aqui.</Text>
+            </View>
+            <Feather name="chevron-right" size={18} color={colors.textMuted} />
+          </Pressable>
+        )}
+
         <Text style={styles.legal}>
           O I'm Here é um apoio à sua rotina espiritual e emocional. Ele não substitui
           acompanhamento médico ou psicológico. Versículos: Almeida (domínio público).
         </Text>
-
-        <InstallButton />
 
         {/* Só em desenvolvimento */}
         {showDev && (
@@ -106,6 +166,18 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   container: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xxl },
   title: { fontSize: 28, fontWeight: '600', color: colors.text },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  editRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  editInput: {
+    flex: 1,
+    fontSize: 24,
+    fontWeight: '600',
+    color: colors.text,
+    backgroundColor: colors.bgSoft,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
   sub: { fontSize: 14, color: colors.olive, marginTop: -spacing.sm, fontWeight: '600' },
   statsRow: { flexDirection: 'row', gap: spacing.sm },
   stat: {
@@ -143,6 +215,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   premiumText: { color: colors.coffee, fontSize: 15, fontWeight: '700' },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: colors.bgSoft,
+    borderRadius: radius.md,
+    padding: spacing.md,
+  },
+  rowTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
+  rowSub: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
   legal: { fontSize: 11, color: colors.textMuted, lineHeight: 17 },
   dev: {
     borderWidth: 1,

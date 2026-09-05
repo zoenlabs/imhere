@@ -145,6 +145,12 @@ export async function syncAlarms(schedules: Schedule[]) {
             smallIcon: 'notification_icon',
             color: '#D4A72C',
             autoCancel: false,
+            // Comportamento de despertador: acende a tela, vibra e repete o
+            // som até o usuário tocar ou dispensar. Para sozinho em 10 min.
+            lightUpScreen: true,
+            loopSound: true,
+            vibrationPattern: [300, 500, 300, 500],
+            timeoutAfter: 10 * 60 * 1000,
             pressAction: { id: 'default', launchActivity: 'default' },
             fullScreenAction: {
               id: 'alarme',

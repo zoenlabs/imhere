@@ -83,6 +83,9 @@ interface AppState {
   name: string;
   goal: Goal | null;
   onboarded: boolean;
+  // Etapa de permissões do alarme já foi mostrada (Android)
+  permissionsReviewed: boolean;
+  markPermissionsReviewed: () => void;
 
   // Gamificação
   today: string;
@@ -106,6 +109,7 @@ interface AppState {
 
   // Ações
   setProfile: (name: string, goal: Goal) => void;
+  setName: (name: string) => void;
   addSchedule: (practiceId: string, hour: number, minute: number, days: number[]) => void;
   toggleSchedule: (id: string) => void;
   removeSchedule: (id: string) => void;
@@ -132,6 +136,7 @@ const initial = {
   name: '',
   goal: null as Goal | null,
   onboarded: false,
+  permissionsReviewed: false,
   today: todayKey(),
   pointsToday: 0,
   practicesToday: 0,
@@ -153,6 +158,8 @@ export const useAppStore = create<AppState>()(
       ...initial,
 
       setProfile: (name, goal) => set({ name, goal, onboarded: true }),
+      setName: (name) => set({ name: name.trim() || 'amigo' }),
+      markPermissionsReviewed: () => set({ permissionsReviewed: true }),
 
       addSchedule: (practiceId, hour, minute, days) => {
         const s = get();

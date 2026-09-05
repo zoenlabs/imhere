@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing } from '@/theme';
+import { permissionsAvailable } from '@/lib/permissions';
 import { Goal, useAppStore } from '@/store/useAppStore';
 
 const goals: { key: Goal; label: string; desc: string }[] = [
@@ -30,7 +31,8 @@ export default function Onboarding() {
 
   const finish = () => {
     setProfile(name.trim() || 'amigo', goal ?? 'conexao');
-    router.replace('/(tabs)');
+    // Android: a etapa de permissões do alarme vem logo depois do onboarding
+    router.replace(permissionsAvailable ? '/permissoes' : '/(tabs)');
   };
 
   return (

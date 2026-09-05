@@ -11,7 +11,7 @@ que bloqueia a revisão das lojas, depois o que é cadastro e material.
 | # | Problema | Onde | Por que bloqueia |
 |---|---|---|---|
 | 1.1 | ~~Modo desenvolvedor acessível em produção.~~ **Resolvido em 04/09/2026:** o gesto dos 5 toques e o campo `devUnlocked` foram removidos. O painel de teste só existe em `__DEV__`. | `app/(tabs)/perfil.tsx`, `src/store/useAppStore.ts` | — |
-| 1.2 | ~~Paywall sem links de Termos e Privacidade.~~ **Resolvido no app em 04/09/2026:** links adicionados no paywall, apontando para `https://im-here.expo.app/termos.html` e `/privacidade.html` (constantes em `src/lib/legal.ts`). As páginas estão em `public/` e são publicadas com a versão web. Contato: `contato@zoenlabs.com.br` (definido em 04/09/2026). **Pendente:** revisar o texto e publicar com `npx expo export --platform web` + `eas deploy`. Se o domínio do deploy sair diferente, ajustar `legal.ts`. | `app/paywall.tsx`, `public/termos.html`, `public/privacidade.html` | As páginas precisam estar no ar antes de enviar para revisão. |
+| 1.2 | ~~Paywall sem links de Termos e Privacidade.~~ **Resolvido no app em 04/09/2026:** links adicionados no paywall, apontando para `https://zoenlabs.github.io/imhere/termos.html` e `/privacidade.html` (constantes em `src/lib/legal.ts`). As páginas estão em `site/` e são publicadas no GitHub Pages. Contato: `contato@zoenlabs.com.br` (definido em 04/09/2026). **Pendente:** revisar o texto e publicar com `npx expo export --platform web` + `eas deploy`. Se o domínio do deploy sair diferente, ajustar `legal.ts`. | `app/paywall.tsx`, `public/termos.html`, `public/privacidade.html` | As páginas precisam estar no ar antes de enviar para revisão. |
 | 1.3 | ~~Chaves do RevenueCat ausentes.~~ **Android resolvido em 04/09/2026** (variável no EAS). iOS pendente até a conta Apple existir. | `src/lib/purchases.ts` | — |
 | 1.4 | ~~Preços divergentes.~~ **Resolvido em 03/09/2026:** mensal R$ 19,90, anual R$ 149,90 (≈ R$ 12,49/mês, 37% de desconto). Paywall já atualizado. | `app/paywall.tsx` | Cadastrar exatamente estes valores nos planos básicos do Play Console. O preço real exibido no app vem da loja; o do código é só o fallback. |
 | 1.5 | ~~Texto do trial enganoso.~~ **Resolvido em 04/09/2026:** o texto legal agora diz que o teste começa ao assinar, explica a renovação automática e o cancelamento com 24 h de antecedência. "Apple Store" corrigido para "App Store". | `app/paywall.tsx` | — |
@@ -76,6 +76,13 @@ Pontos que **não** se aplicam e simplificam a revisão: não há login, então 
 
 ## 5. Android — atenção especial ao alarme
 
+**Teste da versão 4 em 04/09/2026:** o alarme não tocou no horário; a tela cheia só apareceu ao reabrir o app (é a verificação de prática atrasada, janela de 45 min). Causa: no Android 14+ as permissões de **alarmes exatos** e de **tela cheia** não vêm concedidas e o app não pedia nenhuma delas; sem alarme exato o Android atrasa o disparo por minutos. Correção aplicada no mesmo dia:
+
+- Tela nova `app/permissoes.tsx`, mostrada logo após o onboarding e, para quem já instalou, na próxima abertura. Pede notificações na hora e abre a tela certa dos Ajustes para alarmes exatos, tela cheia (Android 14+), otimização de bateria e "início automático" do fabricante. Relê o estado ao voltar dos Ajustes. Acessível também por *Perfil → Alarmes e permissões*.
+- Módulo `src/lib/permissions.ts` (Notifee + `expo-intent-launcher`, dependência nova, exige build).
+- Alarme mais insistente em `src/lib/alarms.ts`: acende a tela, vibra, repete o som até ser dispensado e para sozinho em 10 min.
+- Pendente: **novo build** e repetir o teste no aparelho com todas as permissões liberadas na tela nova.
+
 O plugin `withAlarme.js` pede `USE_FULL_SCREEN_INTENT`, `SCHEDULE_EXACT_ALARM` e `USE_EXACT_ALARM`. A política do Google desde o Android 14:
 
 - `USE_EXACT_ALARM` é reservado a apps de despertador e calendário. Um app de meditação pedindo essa permissão tende a ser **reprovado**. Recomendação: remover e manter só `SCHEDULE_EXACT_ALARM`, que pede autorização ao usuário nos Ajustes.
@@ -117,9 +124,12 @@ A conta do Google Play foi criada em 03/09/2026 com o pacote `com.zoenlabs.imher
 2. **Cadastrar as assinaturas** (seção 3): `imhere_premium_mensal` e `imhere_premium_anual`, planos básicos `mensal` e `anual`, oferta `trial-7-dias` em cada um.
 3. ~~**Corrigir tudo de uma vez.**~~ Feito em 04/09/2026 (itens 1.1, 1.2 no app, 1.5, 1.6, 1.7, 1.8 e ajustes do `app.json`).
 4. ~~**Configurar o RevenueCat** e guardar as chaves no EAS.~~ Feito em 04/09/2026 para Android; falta a credencial validar.
-5. **Publicar Política de Privacidade e Termos:** preencher o e-mail de contato em `public/privacidade.html` e `public/termos.html`, revisar, e rodar `npx expo export --platform web` seguido de `eas deploy --prod`. Conferir que as URLs em `src/lib/legal.ts` batem com o domínio publicado. Colocar a URL da política na ficha do Play Console.
-5b. **Commitar** as mudanças da rodada de correções.
-6. **Build novo de produção**, agora sim o definitivo, enviado ao teste interno. Validar compra, trial, restauração e cancelamento com testadores de licença.
+5. ~~**Publicar Política de Privacidade e Termos.**~~ Publicado em 04/09/2026 na hospedagem da Expo e **movido em 05/09/2026 para o GitHub Pages**, junto com a remoção da versão web/PWA do app (a loja passou a ser o único canal). Páginas em `site/` na raiz do repositório, publicadas automaticamente a cada push na main por `.github/workflows/pages.yml`:
+   - `https://zoenlabs.github.io/imhere/privacidade.html`
+   - `https://zoenlabs.github.io/imhere/termos.html`
+   A URL está em `src/lib/legal.ts`. A hospedagem antiga em `im-here.expo.app` pode ser apagada no painel da Expo. **Pendente:** colar a URL da política na ficha do Play Console (*Política do app → Política de Privacidade*).
+5b. ~~**Commitar** as mudanças da rodada de correções.~~ Commit `7fd49bf` na `main`, 04/09/2026.
+6. **Build novo de produção**, agora sim o definitivo, enviado ao teste interno. Validar compra, trial, restauração e cancelamento com testadores de licença. **Build gerado em 04/09/2026:** versão interna 4, commit `7fd49bf`, com R8, EAS Update e chave do RevenueCat. Ficou 80 minutos na fila gratuita da Expo. Pendente: enviar ao teste interno e rodar o roteiro de testes.
 7. Cumprir o teste fechado de 14 dias no Play, se a conta for pessoal.
 8. Publicar no Play. Repetir contas, produtos e envio para a Apple quando liberar.
 

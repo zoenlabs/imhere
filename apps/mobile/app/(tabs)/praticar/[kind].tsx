@@ -30,11 +30,16 @@ export default function Frases() {
     if (timer.current) clearTimeout(timer.current);
   }, []);
 
+  // Premium: cada frase refletida pontua (até o teto do dia).
+  // Essencial: só a primeira do dia.
+  const premium = s.hasPremiumAccess();
+  const scores = premium || !s.affirmationReadToday;
+
   const reflect = () => {
     if (confirming) return;
     setConfirming(true);
 
-    if (!s.affirmationReadToday) {
+    if (scores) {
       s.addPoints(2);
       s.markAffirmationRead();
     }
@@ -48,9 +53,9 @@ export default function Frases() {
 
   const buttonLabel = confirming
     ? 'Refletida ✓'
-    : s.affirmationReadToday
-      ? 'Li e refleti'
-      : 'Li e refleti (+2 pontos)';
+    : scores
+      ? 'Li e refleti (+2 pontos)'
+      : 'Li e refleti';
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>

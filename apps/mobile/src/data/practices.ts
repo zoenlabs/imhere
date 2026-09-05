@@ -20,6 +20,11 @@ export interface Practice {
   disclaimer?: string;
   /** Quando presente, cada ciclo declara uma palavra diferente na expiração */
   declareWords?: boolean;
+  /**
+   * Frases do tema da prática, sorteadas por ciclo sem repetir na sessão.
+   * Quando existe lista para a fase, ela substitui o `text` fixo da fase.
+   */
+  phrases?: Partial<Record<BreathPhase['kind'], string[]>>;
 }
 
 export const practices: Practice[] = [
@@ -40,6 +45,25 @@ export const practices: Practice[] = [
     points: 10,
     premium: true,
     intro: 'Respire devagar e reconheça: Deus está presente neste momento.',
+    // Inspirar: chegar à presença. Expirar: reconhecer e descansar nela.
+    phrases: {
+      inhale: [
+        'Senhor, estou aqui.',
+        'Tu estás comigo.',
+        'Eu me aquieto diante de ti.',
+        'Aqui, agora, contigo.',
+        'Recebo a tua paz.',
+        'Tu me vês, Senhor.',
+      ],
+      exhale: [
+        'Eu reconheço a tua presença.',
+        'Solto o que não é meu.',
+        'Descanso em ti.',
+        'Tu és o meu abrigo.',
+        'Nada me separa de ti.',
+        'Fica comigo, Senhor.',
+      ],
+    },
   },
   {
     // Protocolo 3 — busca por calma (ansiedade leve/moderada)
@@ -56,6 +80,25 @@ export const practices: Practice[] = [
     points: 10,
     premium: true,
     intro: 'A expiração longa acalma o corpo. Deixe cada ciclo soltar um pouco da tensão.',
+    // Inspirar: acolher a calma. Expirar: soltar a tensão.
+    phrases: {
+      inhale: [
+        'Respiro devagar.',
+        'Deixo o ar entrar.',
+        'Estou seguro agora.',
+        'Um instante de cada vez.',
+        'Acolho a calma.',
+        'Meu corpo desacelera.',
+      ],
+      exhale: [
+        'Solte devagar.',
+        'Deixo a tensão sair.',
+        'Meus ombros descansam.',
+        'Não preciso correr.',
+        'A pressa vai embora.',
+        'Tudo pode esperar um pouco.',
+      ],
+    },
   },
   {
     // Protocolo 6 — momento de ansiedade aguda (pico)
@@ -93,7 +136,26 @@ export const practices: Practice[] = [
     ],
     points: 8,
     premium: true,
-    intro: 'Inspire recebendo. Expire entregando. Ao final, apresente a Deus o seu motivo de oração.',
+    intro: 'Prepare o coração antes de orar. Inspire se abrindo; expire entregando.',
+    // Inspirar: aproximar-se e abrir-se. Expirar: entregar e confiar.
+    phrases: {
+      inhale: [
+        'Preparo o meu coração.',
+        'Senhor, ouve a minha voz.',
+        'Venho até ti.',
+        'Abro-me para ouvir.',
+        'Aquieto os meus pensamentos.',
+        'Tu me convidas a orar.',
+      ],
+      exhale: [
+        'Entrego o que me pesa.',
+        'Aqui está o meu pedido.',
+        'Tua vontade, não a minha.',
+        'Deposito tudo em tuas mãos.',
+        'Eu confio em ti.',
+        'Falo contigo em silêncio.',
+      ],
+    },
   },
   {
     // Protocolo 5 — prática de meditação (sessão mais longa)

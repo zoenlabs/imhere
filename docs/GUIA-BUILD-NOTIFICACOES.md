@@ -54,9 +54,13 @@ funciona igual ao que você já usa.
 
 ## Permissões que o Android vai pedir
 
-Na primeira execução o app pede autorização para notificações. Além disso,
-em Android 14 ou superior pode ser necessário liberar manualmente em
-Ajustes → Apps → I'm Here → "Alarmes e lembretes" e "Notificações em tela cheia".
+Logo depois do onboarding o app abre a etapa "Para o alarme funcionar", que
+pede as notificações e leva o usuário à tela certa dos Ajustes para cada item:
+alarmes exatos (Android 12+), notificações em tela cheia (Android 14+),
+otimização de bateria e a tela de "início automático" de fabricantes como
+Xiaomi, Samsung e Huawei. Sem o alarme exato o Android atrasa o disparo em
+vários minutos; sem a tela cheia o alarme não toma a tela nem acende o aparelho.
+A etapa fica acessível depois em Perfil → Alarmes e permissões.
 
 No lançamento na Play Store será preciso declarar no formulário que o app usa
 alarmes em tela cheia. Sem essa declaração a permissão é negada.

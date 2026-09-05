@@ -193,7 +193,7 @@ export default function Agendamento() {
 
         <Text style={styles.note}>
           {alarmsAvailable
-            ? 'No horário marcado o alarme toca e chama a prática. Um lembrete chega 5 minutos antes. Se não tocar, permita "Notificações" e "Alarmes e lembretes" nos ajustes do app.'
+            ? 'No horário marcado o alarme toca e chama a prática. Um lembrete chega 5 minutos antes. Se não tocar, revise "Alarmes e permissões" no Perfil.'
             : 'Nesta versão os agendamentos ficam salvos, mas o alarme não toca. Instale o app pela loja para receber a chamada no horário.'}
         </Text>
       </ScrollView>

@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { BreathingCircle } from '@/components/BreathingCircle';
 import { affirmationExhale, affirmationInhale } from '@/data/content';
-import { cycleSeconds, practices, totalSeconds } from '@/data/practices';
+import { BreathPhase, cycleSeconds, practices, totalSeconds } from '@/data/practices';
 import { useAppStore } from '@/store/useAppStore';
 import { colors, radius, spacing } from '@/theme';
 
@@ -24,22 +24,30 @@ export default function Respirar() {
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastPhaseRef = useRef(-1);
 
-  // Afirmação: uma frase na inspiração e outra na expiração, por ciclo.
+  // Frases por ciclo: cada fase tira uma frase diferente do tema da prática.
   // Embaralhadas no início da sessão, sem repetir durante a prática.
+  // Na Afirmação as listas vêm do conteúdo ("Eu sou..."); nas demais, do
+  // próprio cadastro da prática.
   const shuffle = (list: string[]) =>
     [...list]
       .map((v) => ({ v, k: Math.random() }))
       .sort((a, b) => a.k - b.k)
       .map(({ v }) => v);
 
-  const decks = useMemo(
-    () =>
-      practice.declareWords
-        ? { inhale: shuffle(affirmationInhale), exhale: shuffle(affirmationExhale) }
-        : null,
+  type Decks = Partial<Record<BreathPhase['kind'], string[]>>;
+  const decks = useMemo<Decks | null>(() => {
+    if (practice.declareWords) {
+      return { inhale: shuffle(affirmationInhale), exhale: shuffle(affirmationExhale) };
+    }
+    if (!practice.phrases) return null;
+    const out: Decks = {};
+    for (const kind of ['inhale', 'hold', 'exhale'] as const) {
+      const list = practice.phrases[kind];
+      if (list && list.length > 0) out[kind] = shuffle(list);
+    }
+    return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [practice.id]
-  );
+  }, [practice.id]);
 
   const cycleLen = cycleSeconds(practice);
   const total = totalSeconds(practice);
@@ -63,16 +71,8 @@ export default function Respirar() {
   const rawPhase = practice.phases[phaseIdx];
   const secondsLeft = rawPhase.seconds - (inCycle - phaseStart);
 
-  const phase =
-    decks && rawPhase.kind !== 'hold'
-      ? {
-          ...rawPhase,
-          text:
-            rawPhase.kind === 'inhale'
-              ? decks.inhale[cycle % decks.inhale.length]
-              : decks.exhale[cycle % decks.exhale.length],
-        }
-      : rawPhase;
+  const deck = decks?.[rawPhase.kind];
+  const phase = deck ? { ...rawPhase, text: deck[cycle % deck.length] } : rawPhase;
 
   const progress = Math.min(1, elapsed / total);
 
@@ -161,7 +161,9 @@ export default function Respirar() {
             {/* Altura fixa: a frase muda a cada fase sem empurrar o layout */}
             <View style={styles.phraseSlot}>
               {phase.text ? (
-                <Text style={[styles.phrase, decks && styles.phraseBold]}>{phase.text}</Text>
+                <Text style={[styles.phrase, practice.declareWords && styles.phraseBold]}>
+                  {phase.text}
+                </Text>
               ) : null}
             </View>
             <Pressable
