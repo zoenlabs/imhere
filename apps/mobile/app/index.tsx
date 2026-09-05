@@ -3,7 +3,6 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, Image, StyleSheet, Text, View } from 'react-native';
 import { colors } from '@/theme';
 import { useAppStore } from '@/store/useAppStore';
-import { permissionsAvailable } from '@/lib/permissions';
 
 // Splash em três tempos: a coroa, o nome, o versículo. Depois entra no app.
 export default function Splash() {
@@ -62,11 +61,8 @@ export default function Splash() {
    */
   const leave = () => {
     if (!finished.current || !useAppStore.getState().hydrated) return;
-    const { onboarded, permissionsReviewed } = useAppStore.getState();
-    if (!onboarded) router.replace('/onboarding');
-    // Android: quem ainda não passou pela etapa de permissões do alarme vê ela primeiro
-    else if (permissionsAvailable && !permissionsReviewed) router.replace('/permissoes');
-    else router.replace('/(tabs)');
+    const { onboarded } = useAppStore.getState();
+    router.replace(onboarded ? '/(tabs)' : '/onboarding');
   };
 
   useEffect(() => {

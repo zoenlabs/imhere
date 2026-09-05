@@ -152,6 +152,7 @@ export async function syncAlarms(schedules: Schedule[]) {
             vibrationPattern: [300, 500, 300, 500],
             timeoutAfter: 10 * 60 * 1000,
             pressAction: { id: 'default', launchActivity: 'default' },
+            actions: [{ title: 'Iniciar', pressAction: { id: 'default', launchActivity: 'default' } }],
             fullScreenAction: {
               id: 'alarme',
               launchActivity: 'default',
@@ -162,6 +163,19 @@ export async function syncAlarms(schedules: Schedule[]) {
       );
     }
   }
+}
+
+/**
+ * Para o som e some com a notificação do alarme quando a tela da prática já
+ * está aberta. Só a notificação exibida: o gatilho semanal continua.
+ */
+export async function cancelAlarmNotification(scheduleId: string) {
+  if (!notifee) return;
+  await Promise.all(
+    [0, 1, 2, 3, 4, 5, 6].map((weekday) =>
+      notifee.cancelDisplayedNotification(`alm-${scheduleId}-${weekday}`).catch(() => {})
+    )
+  );
 }
 
 export const readScheduleId = (data: unknown): string | null => {

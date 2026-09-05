@@ -54,13 +54,20 @@ funciona igual ao que você já usa.
 
 ## Permissões que o Android vai pedir
 
-Logo depois do onboarding o app abre a etapa "Para o alarme funcionar", que
-pede as notificações e leva o usuário à tela certa dos Ajustes para cada item:
-alarmes exatos (Android 12+), notificações em tela cheia (Android 14+),
-otimização de bateria e a tela de "início automático" de fabricantes como
-Xiaomi, Samsung e Huawei. Sem o alarme exato o Android atrasa o disparo em
-vários minutos; sem a tela cheia o alarme não toma a tela nem acende o aparelho.
-A etapa fica acessível depois em Perfil → Alarmes e permissões.
+Ao entrar no app e ao criar um agendamento, o app verifica as permissões do
+alarme e, para cada uma que falta, mostra um aviso curto e abre a tela padrão
+do sistema: notificações, alarmes exatos (Android 12+), notificações em tela
+cheia (Android 14+) e "exibir sobre outros apps". Sem o alarme exato o Android
+atrasa o disparo em vários minutos; sem a tela cheia o alarme não toma a tela
+com o aparelho bloqueado; sem "exibir sobre outros apps" o alarme não aparece
+por cima do que estiver em uso. Em Perfil → Alarmes e permissões a revisão é
+manual e inclui também a otimização de bateria e a tela de "início automático"
+de fabricantes como Xiaomi, Samsung e Huawei.
+
+O que o usuário vê no horário depende do estado do aparelho: bloqueado ou com a
+tela apagada, a tela do alarme aparece pela notificação em tela cheia do
+sistema; em uso, o próprio app abre a tela do alarme por cima do que estiver
+aberto. Nos dois casos há o botão Iniciar, e a notificação também traz esse botão.
 
 No lançamento na Play Store será preciso declarar no formulário que o app usa
 alarmes em tela cheia. Sem essa declaração a permissão é negada.

@@ -1,6 +1,7 @@
-import { useRouter } from 'expo-router';
+import { type Router, useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
-import { AppState, AppStateStatus } from 'react-native';
+import { AppState, AppStateStatus, Linking } from 'react-native';
+import { alarmPermissionsNative } from '../../modules/alarm-permissions';
 import { practices } from '@/data/practices';
 import { ALL_DAYS, useAppStore } from '@/store/useAppStore';
 import {
@@ -15,9 +16,45 @@ import {
 // Janela em que ainda faz sentido chamar a prática depois do horário marcado
 const WINDOW_MINUTES = 45;
 
-// O Notifee exige um tratador de eventos em segundo plano registrado
-// fora do ciclo de vida do React. No Expo Go não existe módulo nativo.
-notifee?.onBackgroundEvent(async () => {});
+/**
+ * A tela do alarme pode ser chamada por três caminhos ao mesmo tempo
+ * (notificação em tela cheia, link aberto em segundo plano e verificação ao
+ * voltar ao primeiro plano). Este registro evita abrir duas vezes.
+ */
+const shownAt = new Map<string, number>();
+export const markAlarmScreenShown = (scheduleId: string) => shownAt.set(scheduleId, Date.now());
+export const alarmScreenShownRecently = (scheduleId: string) =>
+  Date.now() - (shownAt.get(scheduleId) ?? 0) < 10_000;
+
+/** Abre a tela do alarme; se o app acabou de nascer (splash), substitui em vez de empilhar. */
+export function showAlarmScreen(router: Router, scheduleId: string) {
+  if (alarmScreenShownRecently(scheduleId)) return;
+  markAlarmScreenShown(scheduleId);
+  const target = { pathname: '/pratica-agora', params: { scheduleId } } as const;
+  if (router.canGoBack()) router.push(target);
+  else router.replace(target);
+}
+
+// O Notifee exige um tratador de eventos em segundo plano registrado fora do
+// ciclo de vida do React. No Expo Go não existe módulo nativo.
+//
+// Alarme disparado com o app em segundo plano ou fechado:
+// - aparelho bloqueado ou tela apagada: a notificação em tela cheia do
+//   sistema já abre o app (fullScreenAction), nada a fazer aqui;
+// - aparelho em uso: o Android não abre tela cheia por notificação, então o
+//   app abre a tela do alarme por conta própria, por cima do que estiver
+//   aberto. Isso depende da permissão "Exibir sobre outros apps".
+notifee?.onBackgroundEvent(async ({ type, detail }) => {
+  if (!notifeeModule) return;
+  const notification = detail.notification;
+  if (!notification || type !== notifeeModule.EventType.DELIVERED) return;
+  if (!isAlarm(notification.data)) return;
+  if (alarmPermissionsNative?.isLockedOrScreenOff()) return;
+
+  const scheduleId = readScheduleId(notification.data);
+  if (!scheduleId) return;
+  await Linking.openURL(`imhere://pratica-agora?scheduleId=${scheduleId}`).catch(() => {});
+});
 
 /**
  * Abre a prática validando o plano:
@@ -62,11 +99,7 @@ export function usePracticeFlow() {
 
       // Alarme: abre a tela cheia com o botão Iniciar
       if (isAlarm(data) && scheduleId) {
-        useAppStore.getState().markPrompted(scheduleId);
-        setTimeout(
-          () => router.push({ pathname: '/pratica-agora', params: { scheduleId } }),
-          300
-        );
+        setTimeout(() => showAlarmScreen(router, scheduleId), 300);
         return;
       }
 
@@ -119,7 +152,7 @@ export function usePracticeFlow() {
 
       if (!due) return;
       s.markPrompted(due.item.id);
-      router.push({ pathname: '/pratica-agora', params: { scheduleId: due.item.id } });
+      showAlarmScreen(router, due.item.id);
     };
 
     const t = setTimeout(check, 600);

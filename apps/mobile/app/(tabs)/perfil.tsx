@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import { permissionsAvailable } from '@/lib/permissions';
+import { permissionsAvailable, runPermissionFlow } from '@/lib/permissions';
 import { useAppStore } from '@/store/useAppStore';
 import { colors, radius, spacing } from '@/theme';
 
@@ -113,12 +113,14 @@ export default function Perfil() {
         {permissionsAvailable && (
           <Pressable
             style={({ pressed }) => [styles.row, pressed && { opacity: 0.7 }]}
-            onPress={() => router.push('/permissoes')}
+            onPress={() => runPermissionFlow({ force: true, manual: true }).catch(() => {})}
           >
             <Feather name="bell" size={18} color={colors.olive} />
             <View style={{ flex: 1 }}>
               <Text style={styles.rowTitle}>Alarmes e permissões</Text>
-              <Text style={styles.rowSub}>Se o alarme não tocar no horário, revise aqui.</Text>
+              <Text style={styles.rowSub}>
+                Verifica tudo o que o alarme precisa e abre os ajustes do que faltar.
+              </Text>
             </View>
             <Feather name="chevron-right" size={18} color={colors.textMuted} />
           </Pressable>

@@ -8,7 +8,7 @@ export type Goal = 'conexao' | 'calma' | 'ansiedade' | 'oracao' | 'palavra';
 // no Brasil, faria o dia virar às 21h.
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
-const todayKey = (d: Date = new Date()) =>
+export const todayKey = (d: Date = new Date()) =>
   `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 
 // Diferença em dias entre duas chaves YYYY-MM-DD, sem fuso no meio
@@ -83,9 +83,10 @@ interface AppState {
   name: string;
   goal: Goal | null;
   onboarded: boolean;
-  // Etapa de permissões do alarme já foi mostrada (Android)
-  permissionsReviewed: boolean;
-  markPermissionsReviewed: () => void;
+  // Dia em que o usuário respondeu "agora não" ao pedido de permissões do
+  // alarme (Android): o app não insiste de novo no mesmo dia
+  permissionsSnoozedDay: string | null;
+  snoozePermissions: () => void;
 
   // Gamificação
   today: string;
@@ -136,7 +137,7 @@ const initial = {
   name: '',
   goal: null as Goal | null,
   onboarded: false,
-  permissionsReviewed: false,
+  permissionsSnoozedDay: null as string | null,
   today: todayKey(),
   pointsToday: 0,
   practicesToday: 0,
@@ -159,7 +160,7 @@ export const useAppStore = create<AppState>()(
 
       setProfile: (name, goal) => set({ name, goal, onboarded: true }),
       setName: (name) => set({ name: name.trim() || 'amigo' }),
-      markPermissionsReviewed: () => set({ permissionsReviewed: true }),
+      snoozePermissions: () => set({ permissionsSnoozedDay: todayKey() }),
 
       addSchedule: (practiceId, hour, minute, days) => {
         const s = get();

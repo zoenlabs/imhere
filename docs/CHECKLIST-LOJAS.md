@@ -78,10 +78,11 @@ Pontos que **não** se aplicam e simplificam a revisão: não há login, então 
 
 **Teste da versão 4 em 04/09/2026:** o alarme não tocou no horário; a tela cheia só apareceu ao reabrir o app (é a verificação de prática atrasada, janela de 45 min). Causa: no Android 14+ as permissões de **alarmes exatos** e de **tela cheia** não vêm concedidas e o app não pedia nenhuma delas; sem alarme exato o Android atrasa o disparo por minutos. Correção aplicada no mesmo dia:
 
-- Tela nova `app/permissoes.tsx`, mostrada logo após o onboarding e, para quem já instalou, na próxima abertura. Pede notificações na hora e abre a tela certa dos Ajustes para alarmes exatos, tela cheia (Android 14+), otimização de bateria e "início automático" do fabricante. Relê o estado ao voltar dos Ajustes. Acessível também por *Perfil → Alarmes e permissões*.
-- Módulo `src/lib/permissions.ts` (Notifee + `expo-intent-launcher`, dependência nova, exige build).
-- Alarme mais insistente em `src/lib/alarms.ts`: acende a tela, vibra, repete o som até ser dispensado e para sozinho em 10 min.
-- Pendente: **novo build** e repetir o teste no aparelho com todas as permissões liberadas na tela nova.
+- ~~Tela de lista de permissões.~~ Substituída em 05/09/2026 por um **fluxo automático** (`src/lib/permissions.ts`): ao entrar nas abas, ao criar um agendamento e em *Perfil → Alarmes e permissões*, o app verifica em silêncio e, para cada permissão que falta, mostra um aviso curto e abre a tela padrão do sistema, uma após a outra. Se o usuário responde "agora não", não insiste no mesmo dia.
+- **Módulo nativo local** `modules/alarm-permissions` (Kotlin, Expo Modules) para o que nenhuma biblioteca consulta: estado da permissão de tela cheia (Android 14+), estado e ajustes de "Exibir sobre outros apps", e se o aparelho está bloqueado. Compila só no EAS; qualquer erro aparece na fase Gradle.
+- **Alarme por cima de tudo** (`src/lib/usePracticeFlow.ts`): bloqueado ou tela apagada, a notificação em tela cheia do sistema abre o app; em uso, o app abre a tela do alarme por conta própria via link `imhere://pratica-agora`, o que exige "Exibir sobre outros apps". A tela do alarme silencia a notificação ao aparecer e evita abrir duas vezes. Notificação com botão "Iniciar".
+- Alarme insistente em `src/lib/alarms.ts`: acende a tela, vibra, repete o som até ser dispensado e para sozinho em 10 min.
+- Teste da versão 6 em 05/09/2026: alarme tocou no horário (alarme exato OK), mas como notificação discreta, porque o aparelho estava em uso e a tela cheia não se aplica nesse caso. Pendente: **novo build** e repetir o teste nas duas situações, bloqueado e em uso.
 
 O plugin `withAlarme.js` pede `USE_FULL_SCREEN_INTENT`, `SCHEDULE_EXACT_ALARM` e `USE_EXACT_ALARM`. A política do Google desde o Android 14:
 

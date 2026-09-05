@@ -26,7 +26,6 @@ export default function RootLayout() {
       >
         <Stack.Screen name="index" />
         <Stack.Screen name="onboarding" />
-        <Stack.Screen name="permissoes" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="respirar/[id]" options={{ animation: 'fade' }} />
         <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />

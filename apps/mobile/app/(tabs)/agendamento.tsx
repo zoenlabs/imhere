@@ -6,6 +6,7 @@ import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-nat
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TimeField } from '@/components/TimeField';
 import { alarmsAvailable } from '@/lib/alarms';
+import { runPermissionFlow } from '@/lib/permissions';
 import { practiceGlyphs, practiceShort } from '@/data/glyphs';
 import { practices } from '@/data/practices';
 import { ALL_DAYS, dayLabels, daysSummary, FREE, useAppStore } from '@/store/useAppStore';
@@ -43,6 +44,8 @@ export default function Agendamento() {
     }
     s.addSchedule(practiceId, time.getHours(), time.getMinutes(), days);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    // Momento certo para garantir as permissões: o usuário acabou de pedir um alarme
+    runPermissionFlow({ force: true }).catch(() => {});
   };
 
   return (

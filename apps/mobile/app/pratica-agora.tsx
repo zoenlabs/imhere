@@ -1,30 +1,63 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { practices, totalSeconds } from '@/data/practices';
-import { useOpenPractice } from '@/lib/usePracticeFlow';
+import { cancelAlarmNotification } from '@/lib/alarms';
+import {
+  alarmScreenShownRecently,
+  markAlarmScreenShown,
+  useOpenPractice,
+} from '@/lib/usePracticeFlow';
 import { useAppStore } from '@/store/useAppStore';
 import { colors, radius, spacing } from '@/theme';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
 // Tela cheia do horário agendado: nome da prática, horário e o botão Iniciar.
+// Chega aqui pela notificação em tela cheia, pelo link aberto em segundo
+// plano ou pela verificação ao voltar ao app.
 export default function PraticaAgora() {
   const router = useRouter();
   const { scheduleId } = useLocalSearchParams<{ scheduleId?: string }>();
+  const hydrated = useAppStore((s) => s.hydrated);
   const schedules = useAppStore((s) => s.schedules);
   const openPractice = useOpenPractice();
 
   const schedule = schedules.find((x) => x.id === scheduleId);
   const practice = practices.find((p) => p.id === schedule?.practiceId);
 
+  // Quando o app abre direto nesta tela (link ou tela cheia), não há para
+  // onde "voltar": vai para as abas.
+  const leave = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/(tabs)');
+  };
+
+  useEffect(() => {
+    if (!hydrated || !scheduleId) return;
+    // Segunda abertura da mesma chamada em poucos segundos: fecha esta
+    if (alarmScreenShownRecently(scheduleId) && router.canGoBack()) {
+      router.back();
+      return;
+    }
+    markAlarmScreenShown(scheduleId);
+    useAppStore.getState().markPrompted(scheduleId);
+    // A tela já está na frente: para o som e some com a notificação
+    cancelAlarmNotification(scheduleId).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated, scheduleId]);
+
+  if (!hydrated) {
+    return <SafeAreaView style={styles.safe} />;
+  }
+
   if (!schedule || !practice) {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.container}>
           <Text style={styles.title}>Nada agendado agora</Text>
-          <Pressable style={styles.ghost} onPress={() => router.back()}>
+          <Pressable style={styles.ghost} onPress={leave}>
             <Text style={styles.ghostText}>Voltar</Text>
           </Pressable>
         </View>
@@ -35,7 +68,7 @@ export default function PraticaAgora() {
   const min = Math.round(totalSeconds(practice) / 60) || 1;
 
   const start = () => {
-    router.back();
+    leave();
     setTimeout(() => openPractice(practice.id), 150);
   };
 
@@ -60,7 +93,7 @@ export default function PraticaAgora() {
             <Text style={styles.ctaText}>Iniciar</Text>
           </Pressable>
 
-          <Pressable style={styles.ghost} onPress={() => router.back()}>
+          <Pressable style={styles.ghost} onPress={leave}>
             <Text style={styles.ghostText}>Agora não</Text>
           </Pressable>
         </View>
