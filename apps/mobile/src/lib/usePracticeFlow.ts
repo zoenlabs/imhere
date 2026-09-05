@@ -1,7 +1,6 @@
 import { type Router, useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
-import { AppState, AppStateStatus, Linking } from 'react-native';
-import { alarmPermissionsNative } from '../../modules/alarm-permissions';
+import { AppState, AppStateStatus } from 'react-native';
 import { practices } from '@/data/practices';
 import { ALL_DAYS, useAppStore } from '@/store/useAppStore';
 import {
@@ -35,26 +34,8 @@ export function showAlarmScreen(router: Router, scheduleId: string) {
   else router.replace(target);
 }
 
-// O Notifee exige um tratador de eventos em segundo plano registrado fora do
-// ciclo de vida do React. No Expo Go não existe módulo nativo.
-//
-// Alarme disparado com o app em segundo plano ou fechado:
-// - aparelho bloqueado ou tela apagada: a notificação em tela cheia do
-//   sistema já abre o app (fullScreenAction), nada a fazer aqui;
-// - aparelho em uso: o Android não abre tela cheia por notificação, então o
-//   app abre a tela do alarme por conta própria, por cima do que estiver
-//   aberto. Isso depende da permissão "Exibir sobre outros apps".
-notifee?.onBackgroundEvent(async ({ type, detail }) => {
-  if (!notifeeModule) return;
-  const notification = detail.notification;
-  if (!notification || type !== notifeeModule.EventType.DELIVERED) return;
-  if (!isAlarm(notification.data)) return;
-  if (alarmPermissionsNative?.isLockedOrScreenOff()) return;
-
-  const scheduleId = readScheduleId(notification.data);
-  if (!scheduleId) return;
-  await Linking.openURL(`imhere://pratica-agora?scheduleId=${scheduleId}`).catch(() => {});
-});
+// O tratador do alarme em segundo plano fica em src/lib/alarmBackground.ts,
+// importado pelo index.js antes do expo-router.
 
 /**
  * Abre a prática validando o plano:
