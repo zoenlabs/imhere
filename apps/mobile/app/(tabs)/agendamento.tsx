@@ -6,7 +6,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TimeField } from '@/components/TimeField';
 import { alarmsAvailable } from '@/lib/alarms';
-import { runPermissionFlow } from '@/lib/permissions';
+import { shouldPromptPermissions } from '@/lib/permissions';
 import { practiceGlyphs, practiceShort } from '@/data/glyphs';
 import { practices } from '@/data/practices';
 import {
@@ -100,7 +100,9 @@ export default function Agendamento() {
     }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     // Momento certo para garantir as permissões: o usuário acabou de pedir um alarme
-    runPermissionFlow({ force: true }).catch(() => {});
+    shouldPromptPermissions(true)
+      .then((missing) => missing && router.push('/permissoes'))
+      .catch(() => {});
   };
 
   const remove = (id: string) => {

@@ -13,6 +13,9 @@ expo-env.d.ts
 # Builds nativos (gerados pelo prebuild / EAS)
 android/
 ios/
+# Exceção: o código nativo dos módulos locais do app é fonte, não build
+!apps/mobile/modules/*/android/
+!apps/mobile/modules/*/ios/
 *.apk
 *.aab
 *.ipa

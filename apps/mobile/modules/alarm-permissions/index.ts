@@ -10,6 +10,8 @@ export interface AlarmPermissionsNative {
   openFullScreenIntentSettings(): boolean;
   canDrawOverlays(): boolean;
   openOverlaySettings(): boolean;
+  isIgnoringBatteryOptimizations(): boolean;
+  requestIgnoreBatteryOptimizations(): boolean;
   isLockedOrScreenOff(): boolean;
 }
 

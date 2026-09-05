@@ -2,7 +2,7 @@
   "expo": {
     "name": "I'm Here",
     "slug": "im-here",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "scheme": "imhere",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

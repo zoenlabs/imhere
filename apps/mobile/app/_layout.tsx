@@ -30,6 +30,10 @@ export default function RootLayout() {
         <Stack.Screen name="respirar/[id]" options={{ animation: 'fade' }} />
         <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
         <Stack.Screen
+          name="permissoes"
+          options={{ presentation: 'fullScreenModal', animation: 'fade' }}
+        />
+        <Stack.Screen
           name="pratica-agora"
           options={{ presentation: 'fullScreenModal', animation: 'fade' }}
         />

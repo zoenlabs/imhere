@@ -1,9 +1,9 @@
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { ColorValue, Image, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { permissionsAvailable, runPermissionFlow } from '@/lib/permissions';
+import { permissionsAvailable, shouldPromptPermissions } from '@/lib/permissions';
 import { colors } from '@/theme';
 
 const GOLD_OFF = 'rgba(212, 167, 44, 0.45)';
@@ -41,18 +41,21 @@ function PausaButton({ onPress }: { onPress?: (e: any) => void }) {
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   // Barra de gestos / botões do Android: a barra sobe o quanto for preciso
   const bottom = Math.max(insets.bottom, 10);
 
-  // Android: ao entrar no app, verifica as permissões do alarme e abre as
-  // telas do sistema para as que faltam. Não insiste se o usuário já disse
-  // "agora não" hoje.
+  // Android: ao entrar no app, se falta alguma permissão do alarme, abre o
+  // assistente. Não insiste se o usuário pediu "deixar para depois" hoje.
   useEffect(() => {
     if (!permissionsAvailable) return;
     const t = setTimeout(() => {
-      runPermissionFlow().catch(() => {});
+      shouldPromptPermissions()
+        .then((missing) => missing && router.push('/permissoes'))
+        .catch(() => {});
     }, 800);
     return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

@@ -27,6 +27,10 @@ const PERMISSIONS = [
   'android.permission.RECEIVE_BOOT_COMPLETED',
   'android.permission.VIBRATE',
   'android.permission.POST_NOTIFICATIONS',
+  // Janela do sistema para tirar o app da otimização de bateria. A Play Store
+  // só aceita quando a função principal depende disso (é o caso do alarme);
+  // declarar na revisão do app.
+  'android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
 ];
 
 module.exports = function withAlarme(config) {
