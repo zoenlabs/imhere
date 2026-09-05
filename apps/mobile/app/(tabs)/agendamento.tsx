@@ -1,15 +1,24 @@
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TimeField } from '@/components/TimeField';
 import { alarmsAvailable } from '@/lib/alarms';
 import { runPermissionFlow } from '@/lib/permissions';
 import { practiceGlyphs, practiceShort } from '@/data/glyphs';
 import { practices } from '@/data/practices';
-import { ALL_DAYS, dayLabels, daysSummary, FREE, useAppStore } from '@/store/useAppStore';
+import {
+  ALL_DAYS,
+  dayLabels,
+  daysSummary,
+  FREE,
+  MIN_GAP_MINUTES,
+  Schedule,
+  scheduleConflict,
+  useAppStore,
+} from '@/store/useAppStore';
 import { colors, radius, spacing } from '@/theme';
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -25,36 +34,97 @@ export default function Agendamento() {
   const s = useAppStore();
   const premium = s.premium;
 
-  // Plano Essencial: só a Afirmação, e um único agendamento
-  const limitReached = !premium && s.schedules.length >= FREE.maxSchedules;
-
   const [practiceId, setPracticeId] = useState(premium ? practices[0].id : FREE.practiceId);
   const [time, setTime] = useState(() => atTime(7, 0));
   const [days, setDays] = useState<number[]>(ALL_DAYS);
+
+  // Edição: o formulário passa a alterar um agendamento existente
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
+
+  // Plano Essencial: só a Afirmação, e um único agendamento (editar é livre)
+  const limitReached = !premium && !editingId && s.schedules.length >= FREE.maxSchedules;
 
   const toggleDay = (d: number) => {
     setDays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d].sort()));
     Haptics.selectionAsync();
   };
 
-  const add = () => {
+  const startEdit = (item: Schedule) => {
+    setEditingId(item.id);
+    setPracticeId(item.practiceId);
+    setTime(atTime(item.hour, item.minute));
+    setDays(item.days ?? ALL_DAYS);
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+    Haptics.selectionAsync();
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setDays(ALL_DAYS);
+  };
+
+  const save = () => {
     if (limitReached) {
       router.push('/paywall');
       return;
     }
-    s.addSchedule(practiceId, time.getHours(), time.getMinutes(), days);
+
+    const draft = {
+      practiceId,
+      hour: time.getHours(),
+      minute: time.getMinutes(),
+      days: days.length > 0 ? days : ALL_DAYS,
+    };
+
+    // Repetido ou perto demais de outro alarme em dias em comum
+    const conflict = scheduleConflict(s.schedules, draft, editingId ?? undefined);
+    if (conflict) {
+      const other = conflict.other;
+      const otherName = practices.find((p) => p.id === other.practiceId)?.title ?? 'outra prática';
+      const at = `${pad(other.hour)}:${pad(other.minute)}`;
+      Alert.alert(
+        conflict.kind === 'duplicate' ? 'Agendamento repetido' : 'Horários muito próximos',
+        conflict.kind === 'duplicate'
+          ? `Já existe ${otherName} às ${at} nesses dias.`
+          : `Já existe ${otherName} às ${at} em dias em comum. Deixe pelo menos ${MIN_GAP_MINUTES} minutos entre as práticas.`
+      );
+      return;
+    }
+
+    if (editingId) {
+      s.updateSchedule(editingId, draft);
+      setEditingId(null);
+    } else {
+      s.addSchedule(draft.practiceId, draft.hour, draft.minute, draft.days);
+    }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     // Momento certo para garantir as permissões: o usuário acabou de pedir um alarme
     runPermissionFlow({ force: true }).catch(() => {});
   };
 
+  const remove = (id: string) => {
+    if (id === editingId) cancelEdit();
+    s.removeSchedule(id);
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        ref={scrollRef}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.title}>Agendamento</Text>
         <Text style={styles.sub}>Escolha o que praticar e em que horário.</Text>
 
-        <View style={styles.form}>
+        <View style={[styles.form, editingId && styles.formEditing]}>
+          {editingId && (
+            <View style={styles.editingTag}>
+              <Feather name="edit-2" size={12} color={colors.coffee} />
+              <Text style={styles.editingText}>Editando agendamento</Text>
+            </View>
+          )}
           <Text style={styles.label}>Prática</Text>
           <View style={styles.chips}>
             {practices.map((p) => {
@@ -108,12 +178,22 @@ export default function Agendamento() {
 
           <Pressable
             style={({ pressed }) => [styles.add, pressed && styles.addPressed]}
-            onPress={add}
+            onPress={save}
           >
             <Text style={styles.addText}>
-              {limitReached ? 'Mais agendamentos — Premium' : 'Agendar prática'}
+              {editingId
+                ? 'Salvar alterações'
+                : limitReached
+                  ? 'Mais agendamentos — Premium'
+                  : 'Agendar prática'}
             </Text>
           </Pressable>
+
+          {editingId && (
+            <Pressable onPress={cancelEdit} hitSlop={8}>
+              <Text style={styles.cancelEdit}>Cancelar edição</Text>
+            </Pressable>
+          )}
 
           {!premium && (
             <Text style={styles.freeNote}>
@@ -152,23 +232,31 @@ export default function Agendamento() {
 
                 {items.map((item) => {
                   const done = s.doneToday.includes(item.id);
+                  const editing = item.id === editingId;
                   return (
-                  <View key={item.id} style={[styles.row, !item.enabled && styles.rowOff]}>
-                    <Text style={styles.rowTime}>
-                      {pad(item.hour)}:{pad(item.minute)}
-                    </Text>
-
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.rowSub}>
-                        {item.enabled ? daysSummary(item.days ?? []) : 'Pausado'}
+                  <View
+                    key={item.id}
+                    style={[styles.row, !item.enabled && styles.rowOff, editing && styles.rowEditing]}
+                  >
+                    {/* Tocar no horário abre o agendamento no formulário para editar */}
+                    <Pressable style={styles.rowMain} onPress={() => startEdit(item)}>
+                      <Text style={styles.rowTime}>
+                        {pad(item.hour)}:{pad(item.minute)}
                       </Text>
-                      {done && (
-                        <View style={styles.doneTag}>
-                          <Feather name="check" size={11} color={colors.olive} />
-                          <Text style={styles.doneText}>feita hoje</Text>
-                        </View>
-                      )}
-                    </View>
+
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.rowSub}>
+                          {item.enabled ? daysSummary(item.days ?? []) : 'Pausado'}
+                        </Text>
+                        {done && (
+                          <View style={styles.doneTag}>
+                            <Feather name="check" size={11} color={colors.olive} />
+                            <Text style={styles.doneText}>feita hoje</Text>
+                          </View>
+                        )}
+                      </View>
+                      <Feather name="edit-2" size={14} color={colors.textMuted} />
+                    </Pressable>
 
                     <Switch
                       value={item.enabled}
@@ -180,11 +268,7 @@ export default function Agendamento() {
                       thumbColor={colors.bgSoft}
                     />
 
-                    <Pressable
-                      hitSlop={8}
-                      style={styles.remove}
-                      onPress={() => s.removeSchedule(item.id)}
-                    >
+                    <Pressable hitSlop={8} style={styles.remove} onPress={() => remove(item.id)}>
                       <Feather name="trash-2" size={17} color={colors.textMuted} />
                     </Pressable>
                   </View>
@@ -216,6 +300,27 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.sm,
     marginTop: spacing.xs,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  formEditing: { borderColor: colors.gold },
+  editingTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    backgroundColor: colors.gold,
+    borderRadius: radius.full,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  editingText: { fontSize: 11, fontWeight: '800', color: colors.coffee, letterSpacing: 0.5 },
+  cancelEdit: {
+    textAlign: 'center',
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '600',
+    paddingVertical: 4,
   },
   label: {
     fontSize: 11,
@@ -308,6 +413,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   rowOff: { opacity: 0.55 },
+  rowEditing: { backgroundColor: '#FDF3DC', marginHorizontal: -spacing.md, paddingHorizontal: spacing.md },
+  rowMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   rowTime: { fontSize: 20, fontWeight: '800', color: colors.olive, minWidth: 60 },
   rowSub: { fontSize: 12, color: colors.textMuted },
   doneTag: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 1 },

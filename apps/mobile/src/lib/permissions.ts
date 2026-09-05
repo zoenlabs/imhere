@@ -15,7 +15,7 @@ import { notifee, notifeeModule } from './alarms';
  * - Tela cheia (Android 14+): sem ela o alarme não toma a tela bloqueada.
  * - Exibir sobre outros apps: sem ela o app não abre o alarme por cima do
  *   que estiver em uso.
- * - Bateria e "início automático" do fabricante: só na revisão manual.
+ * - Bateria: só na revisão manual pelo Perfil.
  */
 export type Setting = 'ok' | 'off' | 'na';
 
@@ -25,7 +25,6 @@ export interface AlarmPermissions {
   fullScreen: Setting;
   overlay: Setting;
   battery: Setting;
-  manufacturer: Setting;
 }
 
 /** true no development build Android, onde o alarme existe de verdade */
@@ -37,7 +36,6 @@ const NONE: AlarmPermissions = {
   fullScreen: 'na',
   overlay: 'na',
   battery: 'na',
-  manufacturer: 'na',
 };
 
 export async function readPermissions(): Promise<AlarmPermissions> {
@@ -65,17 +63,7 @@ export async function readPermissions(): Promise<AlarmPermissions> {
     battery = 'na';
   }
 
-  // O Android não informa se o app já foi liberado na tela do fabricante;
-  // 'off' aqui significa apenas "existe uma tela para revisar".
-  let manufacturer: Setting = 'na';
-  try {
-    const power = await notifee.getPowerManagerInfo();
-    manufacturer = power.activity ? 'off' : 'na';
-  } catch {
-    manufacturer = 'na';
-  }
-
-  return { notifications, exactAlarm, fullScreen, overlay, battery, manufacturer };
+  return { notifications, exactAlarm, fullScreen, overlay, battery };
 }
 
 async function requestNotifications(): Promise<boolean> {
@@ -122,13 +110,6 @@ const OPTIONAL_STEPS: Step[] = [
     message:
       'Na próxima tela, escolha "Não otimizar" ou "Sem restrições" para o I\'m Here. Alguns aparelhos seguram o alarme com a otimização ligada.',
     open: () => notifee?.openBatteryOptimizationSettings(),
-  },
-  {
-    key: 'manufacturer',
-    title: 'Início automático',
-    message:
-      'Seu aparelho tem uma tela própria que fecha apps em segundo plano. Na próxima tela, libere o I\'m Here.',
-    open: () => notifee?.openPowerManagerSettings(),
   },
 ];
 
@@ -177,7 +158,7 @@ let running = false;
  *
  * - `force`: ignora o "agora não" dado hoje (usado ao criar um agendamento
  *   e na revisão manual pelo Perfil).
- * - `manual`: inclui bateria e fabricante e mostra um resumo no final.
+ * - `manual`: inclui a bateria e mostra um resumo no final.
  *
  * Retorna true quando tudo o que é obrigatório ficou liberado.
  */

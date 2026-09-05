@@ -69,6 +69,38 @@ export const dayNames = [
   'sábado',
 ];
 
+/** Intervalo mínimo entre dois alarmes que caem em um mesmo dia */
+export const MIN_GAP_MINUTES = 5;
+
+export type ScheduleDraft = { practiceId: string; hour: number; minute: number; days: number[] };
+export type ScheduleConflict = { kind: 'duplicate' | 'tooClose'; other: Schedule };
+
+const byTime = (a: Schedule, b: Schedule) => a.hour * 60 + a.minute - (b.hour * 60 + b.minute);
+
+/**
+ * Verifica se um agendamento novo (ou editado, ignorando o próprio id)
+ * bate com algum já salvo em dias em comum: mesma prática no mesmo horário
+ * é repetido; qualquer prática a menos de MIN_GAP_MINUTES é perto demais.
+ */
+export const scheduleConflict = (
+  schedules: Schedule[],
+  draft: ScheduleDraft,
+  ignoreId?: string
+): ScheduleConflict | null => {
+  const draftDays = new Set(draft.days.length > 0 ? draft.days : ALL_DAYS);
+  const a = draft.hour * 60 + draft.minute;
+  for (const other of schedules) {
+    if (other.id === ignoreId) continue;
+    if (!(other.days ?? ALL_DAYS).some((d) => draftDays.has(d))) continue;
+    const b = other.hour * 60 + other.minute;
+    const diff = Math.abs(a - b);
+    const gap = Math.min(diff, 24 * 60 - diff);
+    if (gap === 0 && other.practiceId === draft.practiceId) return { kind: 'duplicate', other };
+    if (gap < MIN_GAP_MINUTES) return { kind: 'tooClose', other };
+  }
+  return null;
+};
+
 export const daysSummary = (days: number[]): string => {
   const set = [...new Set(days)].sort();
   if (set.length === 7) return 'Todos os dias';
@@ -112,6 +144,7 @@ interface AppState {
   setProfile: (name: string, goal: Goal) => void;
   setName: (name: string) => void;
   addSchedule: (practiceId: string, hour: number, minute: number, days: number[]) => void;
+  updateSchedule: (id: string, patch: ScheduleDraft) => void;
   toggleSchedule: (id: string) => void;
   removeSchedule: (id: string) => void;
   markPrompted: (scheduleId: string) => void;
@@ -172,11 +205,25 @@ export const useAppStore = create<AppState>()(
           enabled: true,
           days: days.length > 0 ? [...new Set(days)].sort() : ALL_DAYS,
         };
-        const schedules = [...s.schedules, item].sort(
-          (a, b) => a.hour * 60 + a.minute - (b.hour * 60 + b.minute)
-        );
-        set({ schedules });
+        set({ schedules: [...s.schedules, item].sort(byTime) });
       },
+
+      updateSchedule: (id, patch) =>
+        set({
+          schedules: get()
+            .schedules.map((x) =>
+              x.id === id
+                ? {
+                    ...x,
+                    practiceId: patch.practiceId,
+                    hour: patch.hour,
+                    minute: patch.minute,
+                    days: patch.days.length > 0 ? [...new Set(patch.days)].sort() : ALL_DAYS,
+                  }
+                : x
+            )
+            .sort(byTime),
+        }),
 
       toggleSchedule: (id) =>
         set({
